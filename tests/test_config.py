@@ -1,0 +1,73 @@
+import pytest
+
+from preflight.config import (
+    DEFAULT_FILE_TYPES,
+    normalize_config,
+    validate_config,
+    validate_ownership_rules,
+)
+from preflight.errors import ConfigError
+
+
+def test_missing_ownership_fails():
+    with pytest.raises(ConfigError, match="ownership"):
+        validate_config({})
+
+
+def test_empty_ownership_fails():
+    with pytest.raises(ConfigError, match="cannot be empty"):
+        validate_config({"ownership": []})
+
+
+def test_duplicate_rule_fails():
+    rules = [
+        {"match": "prefix", "path": "src/", "owner": "A"},
+        {"match": "prefix", "path": "src/", "owner": "B"},
+    ]
+    with pytest.raises(ConfigError, match="Duplicate ownership rule"):
+        validate_ownership_rules(rules)
+
+
+def test_normalize_config_adds_defaults_without_mutating_input():
+    config = {"ownership": [{"path": "src/", "owner": "Backend"}]}
+    result = normalize_config(config)
+
+    assert "governance" not in config
+    assert "file_types" not in config
+    assert result["governance"]["critical_escalation"] is True
+    assert result["governance"]["critical_unknown_count"] == 5
+    assert result["governance"]["critical_unknown_ratio"] == 0.25
+    assert result["file_types"] == DEFAULT_FILE_TYPES
+
+
+def test_zero_unknown_ratio_threshold_is_allowed():
+    result = normalize_config(
+        {
+            "ownership": [{"path": "src/", "owner": "Backend"}],
+            "governance": {"critical_unknown_ratio": 0},
+        }
+    )
+    assert result["governance"]["critical_unknown_ratio"] == 0
+
+
+def test_negative_unknown_ratio_fails():
+    with pytest.raises(ConfigError, match="between 0 and 1"):
+        normalize_config(
+            {
+                "ownership": [{"path": "src/", "owner": "Backend"}],
+                "governance": {"critical_unknown_ratio": -0.1},
+            }
+        )
+
+
+def test_conflicting_file_type_rule_fails():
+    with pytest.raises(ConfigError, match="Conflicting file type rule"):
+        validate_config(
+            {
+                "ownership": [{"path": "src/", "owner": "Backend"}],
+                "file_types": {
+                    "one": {"extensions": [".py"]},
+                    "two": {"extensions": [".py"]},
+                },
+            }
+        )

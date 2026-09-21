@@ -1,0 +1,76 @@
+from preflight.report import build_report, calculate_governance_status
+
+
+GOVERNANCE = {
+    "critical_escalation": True,
+    "critical_unknown_count": 5,
+    "critical_unknown_ratio": 0.25,
+}
+
+
+def _change(path, risk="LOW", owner="Docs", issues=None, review=False, checks=None):
+    return {
+        "path": path,
+        "technical_risk": risk,
+        "owner": owner,
+        "governance_issues": issues or [],
+        "manual_review_required": review,
+        "required_checks": checks or [],
+    }
+
+
+def test_unknown_ratio_can_be_critical():
+    changes = [
+        _change("a", owner="Unknown"),
+        _change("b", owner="Unknown"),
+        _change("c"),
+        _change("d"),
+    ]
+    assert calculate_governance_status(changes, GOVERNANCE) == "CRITICAL"
+
+
+def test_boundary_crossing_is_critical():
+    changes = [
+        _change(
+            "src/security/auth.py",
+            owner="Security",
+            issues=[
+                {
+                    "code": "OWNERSHIP_BOUNDARY_CROSSING",
+                    "priority": "HIGH",
+                    "message": "Backend -> Security",
+                }
+            ],
+        )
+    ]
+    assert calculate_governance_status(changes, GOVERNANCE) == "CRITICAL"
+
+
+def test_build_report_aggregates_counts():
+    changes = [
+        _change("a", risk="HIGH", review=True, checks=["build verification"]),
+        _change("b", risk="MEDIUM", review=True, checks=["build verification"]),
+        _change("c", risk="MEDIUM", review=True, checks=["asset verification"]),
+        _change("d", risk="LOW"),
+    ]
+    report = build_report("feature/x", "main", changes, GOVERNANCE, False)
+    summary = report["summary"]
+    assert summary["total_changes"] == 4
+    assert summary["high_count"] == 1
+    assert summary["medium_count"] == 2
+    assert summary["low_count"] == 1
+    assert summary["manual_review_count"] == 3
+    assert set(summary["required_checks"]) == {"build verification", "asset verification"}
+
+
+def test_summary_includes_status_type_and_owner_counts():
+    changes = [
+        {**_change("a.uasset", risk="MEDIUM", owner="Art"), "git_status": "A", "file_type": "asset"},
+        {**_change("b.uasset", risk="MEDIUM", owner="Art"), "git_status": "A", "file_type": "asset"},
+        {**_change("map.umap", risk="MEDIUM", owner="Shared", review=True), "git_status": "M", "file_type": "map"},
+    ]
+    report = build_report("feature/x", "main", changes, GOVERNANCE, False)
+    summary = report["summary"]
+    assert summary["status_counts"] == {"A": 2, "M": 1}
+    assert summary["file_type_counts"] == {"asset": 2, "map": 1}
+    assert summary["owner_counts"] == {"Art": 2, "Shared": 1}

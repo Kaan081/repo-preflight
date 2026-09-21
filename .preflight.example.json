@@ -1,0 +1,11 @@
+{
+  "ownership": [
+    {"match": "prefix", "path": "src/", "owner": "Code"},
+    {"match": "path_exact", "path": "Dockerfile", "owner": "Platform"}
+  ],
+  "governance": {
+    "critical_escalation": true,
+    "critical_unknown_count": 5,
+    "critical_unknown_ratio": 0.25
+  }
+}
