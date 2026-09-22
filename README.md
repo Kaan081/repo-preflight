@@ -65,6 +65,14 @@ Install from PyPI:
 
 ```bash
 pip install repo-preflight
+```
+
+For isolated CLI installation with pipx:
+
+```bash
+pipx install repo-preflight
+```
+
 
 ## Install for development
 

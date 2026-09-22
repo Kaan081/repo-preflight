@@ -1,13 +1,14 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-preflight"
-version = "0.1.4"
+version = "0.1.5"
 description = "Read-only Git integration preflight and repository governance CLI"
+readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
   {name = "Kaan081"}
 ]
@@ -28,3 +29,9 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/Kaan081/repo-preflight"
+Repository = "https://github.com/Kaan081/repo-preflight"
+Issues = "https://github.com/Kaan081/repo-preflight/issues"
+Changelog = "https://github.com/Kaan081/repo-preflight/blob/main/CHANGELOG.md"
