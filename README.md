@@ -220,7 +220,7 @@ Ownership gaps produce `ATTENTION` until the configured count/ratio threshold is
 
 ## Project status
 
-Current release: **0.1.4**
+Current release: **0.1.5**
 
 The project is intentionally conservative: it reports and prioritizes integration signals instead of automatically merging or blocking changes.
 
