@@ -59,6 +59,13 @@ Governance issues:
 
 Runtime dependencies: none outside the Python standard library.
 
+## Install
+
+Install from PyPI:
+
+```bash
+pip install repo-preflight
+
 ## Install for development
 
 Clone the repository and run:
