@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Add PyPI package metadata and project links.
+- Add GitHub Actions Trusted Publishing workflow for PyPI.
+- Prepare Repo Preflight for `pip install repo-preflight`.
+  
 ## 0.1.4
 
 - Make ownership prefix matching path-segment aware, so a rule such as `src` no longer matches `src2/...`.
