@@ -1,4 +1,5 @@
 from .errors import ConfigError
+from .pathmatch import path_prefix_matches
 
 
 def rule_matches(path, rule):
@@ -8,7 +9,7 @@ def rule_matches(path, rule):
     if match_type == "path_exact":
         return path == rule_path
     if match_type == "prefix":
-        return path.startswith(rule_path)
+        return path_prefix_matches(path, rule_path)
 
     raise ConfigError(f"Unsupported ownership match type: {match_type}")
 

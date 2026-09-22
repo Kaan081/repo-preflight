@@ -24,3 +24,20 @@ def test_longest_path_prefix_wins():
         "security": {"names": [], "path_prefixes": ["src/security/"], "extensions": []},
     }
     assert classify_file("src/security/auth.py", file_types) == "security"
+
+
+def test_path_prefix_is_path_segment_aware():
+    file_types = {
+        "special": {"names": [], "path_prefixes": ["src"], "extensions": []},
+    }
+
+    assert classify_file("src/readme.xyz", file_types) == "special"
+    assert classify_file("src2/readme.xyz", file_types) == "other"
+
+
+def test_path_prefix_normalizes_windows_separators():
+    file_types = {
+        "special": {"names": [], "path_prefixes": ["src\\security"], "extensions": []},
+    }
+
+    assert classify_file("src/security/policy.xyz", file_types) == "special"

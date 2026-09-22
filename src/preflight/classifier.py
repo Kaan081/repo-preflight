@@ -1,5 +1,7 @@
 from pathlib import PurePosixPath
 
+from .pathmatch import path_prefix_matches
+
 
 def classify_file(path, file_types):
     normalized_path = path.replace("\\", "/")
@@ -16,7 +18,7 @@ def classify_file(path, file_types):
     for file_type, rules in file_types.items():
         for prefix in rules.get("path_prefixes", []):
             normalized_prefix = prefix.replace("\\", "/").lower()
-            if lower_path.startswith(normalized_prefix):
+            if path_prefix_matches(lower_path, normalized_prefix):
                 prefix_matches.append((len(normalized_prefix), file_type))
 
     if prefix_matches:

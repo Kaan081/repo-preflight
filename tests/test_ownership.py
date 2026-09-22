@@ -32,3 +32,17 @@ def test_path_exact_beats_equal_length_prefix():
         {"match": "path_exact", "path": "src/", "owner": "Exact"},
     ]
     assert get_owner("src/", rules) == "Exact"
+
+
+def test_prefix_is_path_segment_aware():
+    rule = {"match": "prefix", "path": "src", "owner": "Backend"}
+
+    assert rule_matches("src", rule) is True
+    assert rule_matches("src/app.py", rule) is True
+    assert rule_matches("src2/app.py", rule) is False
+
+
+def test_prefix_normalizes_windows_separators():
+    rule = {"match": "prefix", "path": "src\\payment", "owner": "Payments"}
+
+    assert rule_matches("src/payment/checkout.py", rule) is True
