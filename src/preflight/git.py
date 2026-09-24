@@ -110,6 +110,32 @@ def get_git_topology(base_revision, head_revision, cwd=None):
     }
 
 
+def get_changed_paths(from_revision, to_revision, cwd=None):
+    validate_revision_argument(from_revision)
+    validate_revision_argument(to_revision)
+    raw = run_git(
+        [
+            "diff",
+            "--name-only",
+            "-z",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--no-renames",
+            from_revision,
+            to_revision,
+        ],
+        cwd=cwd,
+    )
+    return {path for path in raw.split("\0") if path}
+
+
+def get_collision_paths(topology, cwd=None):
+    merge_base = topology["merge_base"]
+    base_paths = get_changed_paths(merge_base, topology["base_sha"], cwd=cwd)
+    head_paths = get_changed_paths(merge_base, topology["head_sha"], cwd=cwd)
+    return base_paths & head_paths
+
+
 def get_diff_name_status(base_branch, head_revision="HEAD", cwd=None):
     validate_revision_argument(base_branch)
     validate_revision_argument(head_revision)

@@ -53,6 +53,23 @@ def print_report(report):
         print(f"Relationship: {terminal_safe(topology['relationship'])}")
         print(f"FF eligible: {'YES' if topology['ff_eligible'] else 'NO'}")
 
+    collisions = report.get("collisions")
+    if collisions is not None:
+        print()
+        print("Collisions:")
+        print(f"Count: {terminal_safe(collisions['count'])}")
+        print(f"Binary-sensitive: {terminal_safe(collisions['binary_sensitive_count'])}")
+        if not collisions["files"]:
+            print("- None")
+        else:
+            for item in collisions["files"]:
+                path = terminal_safe(item["path"])
+                file_type = terminal_safe(item["file_type"])
+                if item["binary_sensitive"]:
+                    print(f"- {path} [{file_type}, BINARY-SENSITIVE]")
+                else:
+                    print(f"- {path} [{file_type}]")
+
     print()
     print(f"Technical risk: {terminal_safe(report['technical_risk'])}")
     print(f"Governance: {terminal_safe(report['governance_status'])}")

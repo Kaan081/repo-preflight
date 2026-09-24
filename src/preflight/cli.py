@@ -2,11 +2,13 @@ import argparse
 import sys
 
 from .analyzer import analyze_change
+from .collisions import build_collision_report
 from .config import load_config
 from .errors import ConfigError, GitError, PreflightError
 from .git import (
     ensure_git_repository,
     ensure_revision_exists,
+    get_collision_paths,
     get_current_branch,
     get_diff_name_status,
     get_git_topology,
@@ -43,6 +45,10 @@ def run(argv=None, cwd=None):
     branch = get_current_branch(cwd=cwd)
     dirty = is_worktree_dirty(cwd=cwd)
     topology = get_git_topology(args.base, args.head, cwd=cwd)
+    collisions = build_collision_report(
+        get_collision_paths(topology, cwd=cwd),
+        config["file_types"],
+    )
 
     raw_changes = parse_git_diff(
         get_diff_name_status(args.base, head_revision=args.head, cwd=cwd)
@@ -61,6 +67,7 @@ def run(argv=None, cwd=None):
         worktree_dirty=dirty,
         head_revision=args.head,
         topology=topology,
+        collisions=collisions,
     )
 
     if args.json:

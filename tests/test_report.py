@@ -100,3 +100,29 @@ def test_build_report_includes_optional_topology():
 def test_build_report_omits_topology_when_not_provided():
     report = build_report("feature/x", "main", [], GOVERNANCE, False)
     assert "topology" not in report
+
+
+def test_build_report_includes_optional_collisions():
+    collisions = {
+        "count": 1,
+        "binary_sensitive_count": 0,
+        "files": [
+            {"path": "src/app.py", "file_type": "source", "binary_sensitive": False}
+        ],
+    }
+    report = build_report(
+        "feature/x",
+        "main",
+        [],
+        GOVERNANCE,
+        False,
+        collisions=collisions,
+    )
+    assert report["collisions"] == collisions
+    assert report["technical_risk"] == "LOW"
+    assert report["governance_status"] == "PASS"
+
+
+def test_build_report_omits_collisions_when_not_provided():
+    report = build_report("feature/x", "main", [], GOVERNANCE, False)
+    assert "collisions" not in report

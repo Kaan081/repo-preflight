@@ -98,6 +98,7 @@ def build_report(
     worktree_dirty,
     head_revision="HEAD",
     topology=None,
+    collisions=None,
 ):
     summary = build_summary(changes)
     report = {
@@ -112,4 +113,6 @@ def build_report(
     }
     if topology is not None:
         report["topology"] = topology
+    if collisions is not None:
+        report["collisions"] = collisions
     return report

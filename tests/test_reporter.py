@@ -68,3 +68,48 @@ def test_print_json_report_uses_boolean_ff_eligible(capsys):
     assert payload["topology"]["ff_eligible"] is False
     assert "YES" not in raw
     assert "NO" not in json.dumps(payload["topology"])
+
+
+def _report_with_collisions(files):
+    report = _report_with_topology()
+    report["collisions"] = {
+        "count": len(files),
+        "binary_sensitive_count": sum(1 for item in files if item["binary_sensitive"]),
+        "files": files,
+    }
+    return report
+
+
+def test_print_report_zero_collisions(capsys):
+    print_report(_report_with_collisions([]))
+    output = capsys.readouterr().out
+    assert "Collisions:" in output
+    assert "Count: 0" in output
+    assert "Binary-sensitive: 0" in output
+    collisions_block = output.split("Collisions:", 1)[1].split("Technical risk:", 1)[0]
+    assert "- None" in collisions_block
+
+
+def test_print_report_nonzero_collisions(capsys):
+    print_report(
+        _report_with_collisions(
+            [
+                {
+                    "path": "Content/Maps/Test.umap",
+                    "file_type": "map",
+                    "binary_sensitive": True,
+                },
+                {
+                    "path": "src/app.py",
+                    "file_type": "source",
+                    "binary_sensitive": False,
+                },
+            ]
+        )
+    )
+    output = capsys.readouterr().out
+    assert "Collisions:" in output
+    assert "Count: 2" in output
+    assert "Binary-sensitive: 1" in output
+    assert "- Content/Maps/Test.umap [map, BINARY-SENSITIVE]" in output
+    assert "- src/app.py [source]" in output
