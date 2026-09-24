@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.7
+
+- Detect same-path branch collisions: repository paths changed on both `--base` and `--head` since their merge-base.
+- Report collisions as a separate advisory signal. A collision is not a claim of a Git textual merge conflict.
+- Mark `asset` and `map` collisions as binary-sensitive without inspecting file contents.
+- Include deterministic collision data in JSON and a dedicated terminal section.
+- Collision detection honors explicit `--head` without checking that revision out.
+- Rename handling is path-level and conservative (`--no-renames`): overlap is the same path string, not rename identity.
+- Technical-risk and governance verdicts are unchanged.
+- Validate the release with a 75-test suite.
+
 ## 0.1.6
 
 - Report Git topology for `--base` and `--head`: resolved SHAs, merge-base, ahead/behind counts, relationship, and fast-forward eligibility.

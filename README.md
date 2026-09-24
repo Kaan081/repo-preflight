@@ -17,6 +17,7 @@ Repo Preflight can:
 - produce a focused manual-review list instead of treating every changed file equally;
 - warn when the working tree is dirty;
 - report how the analyzed head relates to the base revision (ahead/behind, merge-base, relationship, and fast-forward eligibility);
+- report same-path collisions since the merge-base as a separate advisory signal;
 - output human-readable text or deterministic JSON.
 
 It **does not** merge, checkout, commit, delete, modify, or automatically approve repository changes.
@@ -38,6 +39,11 @@ Behind: 0
 Ahead: 3
 Relationship: LINEAR
 FF eligible: YES
+
+Collisions:
+Count: 0
+Binary-sensitive: 0
+- None
 
 Technical risk: MEDIUM
 Governance: PASS
@@ -180,6 +186,22 @@ preflight --base main --json
 
 If JSON is redirected into a file inside the inspected repository, the shell creates that file before Repo Preflight starts, so the working tree can correctly appear as `DIRTY`. Redirect outside the repository if you want an unchanged worktree state.
 
+## Collisions
+
+A **collision** means the same repository path changed on both sides since the merge-base of `--base` and `--head`. It does **not** guarantee a textual Git merge conflict.
+
+`asset` and `map` collisions are marked `BINARY-SENSITIVE`. Rename handling in v0.1.7 is path-string overlap only (`--no-renames`); it is not rename-identity aware.
+
+Collisions are a separate advisory signal. They do not change technical-risk or governance verdicts. Repo Preflight remains read-only and advisory.
+
+```text
+Collisions:
+Count: 2
+Binary-sensitive: 1
+- Content/Maps/Test.umap [map, BINARY-SENSITIVE]
+- src/app.py [source]
+```
+
 ## Exit codes
 
 | Code | Meaning |
@@ -245,7 +267,7 @@ Ownership gaps produce `ATTENTION` until the configured count/ratio threshold is
 
 ## Project status
 
-Current release: **0.1.6**
+Current release: **0.1.7**
 
 The project is intentionally conservative: it reports and prioritizes integration signals instead of automatically merging or blocking changes.
 
