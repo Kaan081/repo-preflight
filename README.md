@@ -16,6 +16,7 @@ Repo Preflight can:
 - emit required verification checks;
 - produce a focused manual-review list instead of treating every changed file equally;
 - warn when the working tree is dirty;
+- report how the analyzed head relates to the base revision (ahead/behind, merge-base, relationship, and fast-forward eligibility);
 - output human-readable text or deterministic JSON.
 
 It **does not** merge, checkout, commit, delete, modify, or automatically approve repository changes.
@@ -28,6 +29,15 @@ Current branch: dev
 Base: dev
 Head: origin/feature/environment-pass
 Repository state: CLEAN
+
+Topology:
+Base SHA: 0123456789abcdef0123456789abcdef01234567
+Head SHA: fedcba9876543210fedcba9876543210fedcba98
+Merge base: 0123456789abcdef0123456789abcdef01234567
+Behind: 0
+Ahead: 3
+Relationship: LINEAR
+FF eligible: YES
 
 Technical risk: MEDIUM
 Governance: PASS
@@ -136,11 +146,11 @@ A `path_exact` rule owns one exact repository-relative path:
 
 When several rules match, the most specific rule wins. An exact-path rule wins over an equivalent prefix rule.
 
-Prefix matching is path-segment aware. For example, a rule for `src` matches `src/app.py` but not `src2/app.py`.
+Prefix matching is path-segment aware. For example, a rule for `src` matches `src/app.py` but not `src2/app.py`. Equivalent prefix spellings such as `src`, `src/`, and `src\\` are the same ownership rule.
 
 An unmatched path becomes `Unknown`. Analysis continues and the path is reported as an ownership governance gap.
 
-> Current ownership resolution returns one effective owner per path. Multiple co-owners for the same path are not modeled in v0.1.4.
+> Current ownership resolution returns one effective owner per path. Multiple co-owners for the same path are not modeled.
 
 ## Run
 
@@ -235,7 +245,7 @@ Ownership gaps produce `ATTENTION` until the configured count/ratio threshold is
 
 ## Project status
 
-Current release: **0.1.5**
+Current release: **0.1.6**
 
 The project is intentionally conservative: it reports and prioritizes integration signals instead of automatically merging or blocking changes.
 

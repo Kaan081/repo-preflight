@@ -116,6 +116,13 @@ def test_cli_json_end_to_end(tmp_path):
     assert report["governance_status"] == "PASS"
     assert report["repository_state"] == "CLEAN"
     assert report["head"] == "HEAD"
+    topology = report["topology"]
+    assert topology["relationship"] == "LINEAR"
+    assert topology["behind"] == 0
+    assert topology["ahead"] > 0
+    assert topology["ff_eligible"] is True
+    assert topology["merge_base"] == topology["base_sha"]
+    assert isinstance(topology["ff_eligible"], bool)
 
 
 def test_cli_bad_config_returns_2(tmp_path):
@@ -173,3 +180,8 @@ def test_cli_can_analyze_explicit_head_without_checkout(tmp_path):
     assert report["head"] == feature_commit
     assert report["summary"]["total_changes"] == 2
     assert report["technical_risk"] == "MEDIUM"
+    topology = report["topology"]
+    assert topology["head_sha"] == feature_commit
+    assert topology["relationship"] == "LINEAR"
+    assert topology["ff_eligible"] is True
+    assert git(repo, "branch", "--show-current").stdout.strip() == base_branch

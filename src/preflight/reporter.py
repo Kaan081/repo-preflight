@@ -40,6 +40,19 @@ def print_report(report):
     print(f"Base: {terminal_safe(report['base'])}")
     print(f"Head: {terminal_safe(report['head'])}")
     print(f"Repository state: {terminal_safe(report['repository_state'])}")
+
+    topology = report.get("topology")
+    if topology is not None:
+        print()
+        print("Topology:")
+        print(f"Base SHA: {terminal_safe(topology['base_sha'])}")
+        print(f"Head SHA: {terminal_safe(topology['head_sha'])}")
+        print(f"Merge base: {terminal_safe(topology['merge_base'])}")
+        print(f"Behind: {terminal_safe(topology['behind'])}")
+        print(f"Ahead: {terminal_safe(topology['ahead'])}")
+        print(f"Relationship: {terminal_safe(topology['relationship'])}")
+        print(f"FF eligible: {'YES' if topology['ff_eligible'] else 'NO'}")
+
     print()
     print(f"Technical risk: {terminal_safe(report['technical_risk'])}")
     print(f"Governance: {terminal_safe(report['governance_status'])}")

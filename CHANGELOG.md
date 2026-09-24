@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.6
+
+- Report Git topology for `--base` and `--head`: resolved SHAs, merge-base, ahead/behind counts, relationship, and fast-forward eligibility.
+- Treat equivalent ownership prefix spellings (`src`, `src/`, `src\\`) as the same rule during config validation.
+- Reject ownership prefix rules that canonicalize to an empty path.
+- Use canonical prefix length for ownership specificity so trailing slashes cannot make a prefix artificially more specific.
+- Add focused topology and prefix-canonicalization tests.
+
 ## 0.1.5
 
 - Add PyPI package metadata and project links.

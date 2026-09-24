@@ -9,6 +9,7 @@ from .git import (
     ensure_revision_exists,
     get_current_branch,
     get_diff_name_status,
+    get_git_topology,
     is_worktree_dirty,
     parse_git_diff,
 )
@@ -41,6 +42,7 @@ def run(argv=None, cwd=None):
     ensure_revision_exists(args.head, cwd=cwd)
     branch = get_current_branch(cwd=cwd)
     dirty = is_worktree_dirty(cwd=cwd)
+    topology = get_git_topology(args.base, args.head, cwd=cwd)
 
     raw_changes = parse_git_diff(
         get_diff_name_status(args.base, head_revision=args.head, cwd=cwd)
@@ -58,6 +60,7 @@ def run(argv=None, cwd=None):
         config["governance"],
         worktree_dirty=dirty,
         head_revision=args.head,
+        topology=topology,
     )
 
     if args.json:

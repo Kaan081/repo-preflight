@@ -46,3 +46,18 @@ def test_prefix_normalizes_windows_separators():
     rule = {"match": "prefix", "path": "src\\payment", "owner": "Payments"}
 
     assert rule_matches("src/payment/checkout.py", rule) is True
+
+
+def test_canonical_prefix_spelling_does_not_change_specificity():
+    padded_short_prefix = [
+        {"match": "prefix", "path": "src////////", "owner": "Shallow"},
+        {"match": "prefix", "path": "src/app", "owner": "Deep"},
+    ]
+    canonical_short_prefix = [
+        {"match": "prefix", "path": "src", "owner": "Shallow"},
+        {"match": "prefix", "path": "src/app", "owner": "Deep"},
+    ]
+    path = "src/app/checkout.py"
+    assert get_owner(path, padded_short_prefix) == "Deep"
+    assert get_owner(path, canonical_short_prefix) == "Deep"
+    assert get_owner(path, padded_short_prefix) == get_owner(path, canonical_short_prefix)

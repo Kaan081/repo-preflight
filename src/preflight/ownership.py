@@ -1,5 +1,5 @@
 from .errors import ConfigError
-from .pathmatch import path_prefix_matches
+from .pathmatch import canonical_prefix, path_prefix_matches
 
 
 def rule_matches(path, rule):
@@ -21,8 +21,14 @@ def get_owner(path, rules, default_owner=None):
         return default_owner if default_owner is not None else "Unknown"
 
     def specificity(rule):
-        match_rank = 1 if rule.get("match", "prefix") == "path_exact" else 0
-        return (len(rule["path"]), match_rank)
+        match_type = rule.get("match", "prefix")
+        match_rank = 1 if match_type == "path_exact" else 0
+        path = rule["path"]
+        if match_type == "prefix":
+            path_length = len(canonical_prefix(path))
+        else:
+            path_length = len(path)
+        return (path_length, match_rank)
 
     most_specific = max(matches, key=specificity)
     return most_specific["owner"]

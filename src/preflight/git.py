@@ -55,6 +55,61 @@ def ensure_revision_exists(revision, cwd=None):
         raise GitError(f"Git revision does not exist: {revision}") from error
 
 
+def resolve_commit_sha(revision, cwd=None):
+    validate_revision_argument(revision)
+    try:
+        sha = run_git(
+            ["rev-parse", "--verify", f"{revision}^{{commit}}"],
+            cwd=cwd,
+        ).strip()
+    except GitError as error:
+        raise GitError(f"Git revision does not exist: {revision}") from error
+    if not sha:
+        raise GitError(f"Git revision does not exist: {revision}")
+    return sha
+
+
+def classify_topology_relationship(behind, ahead):
+    if behind == 0 and ahead == 0:
+        return "SAME"
+    if behind == 0 and ahead > 0:
+        return "LINEAR"
+    if behind > 0 and ahead == 0:
+        return "HEAD_BEHIND"
+    return "DIVERGED"
+
+
+def get_git_topology(base_revision, head_revision, cwd=None):
+    base_sha = resolve_commit_sha(base_revision, cwd=cwd)
+    head_sha = resolve_commit_sha(head_revision, cwd=cwd)
+    merge_base = run_git(["merge-base", base_sha, head_sha], cwd=cwd).strip()
+    count_output = run_git(
+        ["rev-list", "--left-right", "--count", f"{base_sha}...{head_sha}"],
+        cwd=cwd,
+    ).strip()
+    parts = count_output.split()
+    if len(parts) != 2:
+        raise GitError(f"Unexpected git rev-list count output: {count_output}")
+    try:
+        behind = int(parts[0])
+        ahead = int(parts[1])
+    except ValueError as error:
+        raise GitError(f"Unexpected git rev-list count output: {count_output}") from error
+    if behind < 0 or ahead < 0:
+        raise GitError(f"Unexpected git rev-list count output: {count_output}")
+
+    relationship = classify_topology_relationship(behind, ahead)
+    return {
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "merge_base": merge_base,
+        "behind": behind,
+        "ahead": ahead,
+        "relationship": relationship,
+        "ff_eligible": behind == 0,
+    }
+
+
 def get_diff_name_status(base_branch, head_revision="HEAD", cwd=None):
     validate_revision_argument(base_branch)
     validate_revision_argument(head_revision)

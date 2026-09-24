@@ -74,3 +74,29 @@ def test_summary_includes_status_type_and_owner_counts():
     assert summary["status_counts"] == {"A": 2, "M": 1}
     assert summary["file_type_counts"] == {"asset": 2, "map": 1}
     assert summary["owner_counts"] == {"Art": 2, "Shared": 1}
+
+
+def test_build_report_includes_optional_topology():
+    topology = {
+        "base_sha": "a" * 40,
+        "head_sha": "b" * 40,
+        "merge_base": "a" * 40,
+        "behind": 0,
+        "ahead": 1,
+        "relationship": "LINEAR",
+        "ff_eligible": True,
+    }
+    report = build_report(
+        "feature/x",
+        "main",
+        [],
+        GOVERNANCE,
+        False,
+        topology=topology,
+    )
+    assert report["topology"] == topology
+
+
+def test_build_report_omits_topology_when_not_provided():
+    report = build_report("feature/x", "main", [], GOVERNANCE, False)
+    assert "topology" not in report

@@ -97,9 +97,10 @@ def build_report(
     governance_config,
     worktree_dirty,
     head_revision="HEAD",
+    topology=None,
 ):
     summary = build_summary(changes)
-    return {
+    report = {
         "branch": branch,
         "base": base_branch,
         "head": head_revision,
@@ -109,3 +110,6 @@ def build_report(
         "summary": summary,
         "changes": changes,
     }
+    if topology is not None:
+        report["topology"] = topology
+    return report

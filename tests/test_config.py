@@ -28,6 +28,37 @@ def test_duplicate_rule_fails():
         validate_ownership_rules(rules)
 
 
+def test_canonical_prefix_slash_and_backslash_are_duplicates():
+    rules = [
+        {"match": "prefix", "path": "src/", "owner": "A"},
+        {"match": "prefix", "path": "src\\", "owner": "B"},
+    ]
+    with pytest.raises(ConfigError, match="Duplicate ownership rule"):
+        validate_ownership_rules(rules)
+
+
+def test_canonical_prefix_with_and_without_trailing_slash_are_duplicates():
+    rules = [
+        {"match": "prefix", "path": "src", "owner": "A"},
+        {"match": "prefix", "path": "src/", "owner": "B"},
+    ]
+    with pytest.raises(ConfigError, match="Duplicate ownership rule"):
+        validate_ownership_rules(rules)
+
+
+@pytest.mark.parametrize("path", ["/", "\\", "///", "\\\\"])
+def test_empty_canonical_prefix_is_rejected(path):
+    rules = [{"match": "prefix", "path": path, "owner": "A"}]
+    with pytest.raises(ConfigError, match="empty path"):
+        validate_ownership_rules(rules)
+
+
+def test_path_exact_slash_is_still_allowed():
+    validate_ownership_rules(
+        [{"match": "path_exact", "path": "/", "owner": "Root"}]
+    )
+
+
 def test_normalize_config_adds_defaults_without_mutating_input():
     config = {"ownership": [{"path": "src/", "owner": "Backend"}]}
     result = normalize_config(config)

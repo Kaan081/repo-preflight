@@ -3,6 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from .errors import ConfigError
+from .pathmatch import canonical_prefix
 
 
 DEFAULT_GOVERNANCE = {
@@ -107,7 +108,15 @@ def validate_ownership_rules(rules):
         if not isinstance(owner, str) or not owner.strip():
             raise ConfigError("Ownership owner must be a non-empty string")
 
-        rule_key = (match_type, path)
+        if match_type == "prefix":
+            rule_path = canonical_prefix(path)
+            if not rule_path:
+                raise ConfigError(
+                    f"Ownership prefix cannot canonicalize to an empty path: {path}"
+                )
+        else:
+            rule_path = path
+        rule_key = (match_type, rule_path)
         if rule_key in seen_rules:
             raise ConfigError(f"Duplicate ownership rule: {match_type}:{path}")
         seen_rules.add(rule_key)
