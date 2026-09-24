@@ -297,3 +297,73 @@ def test_cli_json_collision_schema_uses_real_booleans(tmp_path):
     assert "NO" not in json.dumps(collisions)
     assert report["technical_risk"] in {"LOW", "MEDIUM", "HIGH"}
     assert report["governance_status"] in {"PASS", "ATTENTION", "CRITICAL"}
+
+
+def test_add_add_same_path_on_diverged_branches_is_a_collision(tmp_path):
+    repo, _, base_sha, head_sha, config_path = create_diverged_repo(
+        tmp_path,
+        shared={"src/keep.py": "keep\n"},
+        base_edits={"src/new.py": "base-new\n"},
+        head_edits={"src/new.py": "head-new\n"},
+    )
+    topology = get_git_topology(base_sha, head_sha, cwd=repo)
+    assert topology["relationship"] == "DIVERGED"
+
+    paths = collision_paths(repo, base_sha, head_sha)
+    assert "src/new.py" in paths
+
+    config = normalize_config(json.loads(config_path.read_text(encoding="utf-8")))
+    report = build_collision_report(paths, config["file_types"])
+    assert report["count"] == 1
+    assert report["files"][0]["path"] == "src/new.py"
+
+
+def test_delete_modify_same_path_on_diverged_branches_is_a_collision(tmp_path):
+    repo = init_repo(tmp_path)
+    write_files(repo, {"src/app.py": "shared\n"})
+    write_config(repo)
+    commit_all(repo, "shared")
+    base_branch = current_branch(repo)
+
+    git(repo, "checkout", "-b", "feature/collision")
+    write_files(repo, {"src/app.py": "head-modified\n"})
+    head_sha = commit_all(repo, "head-modifies")
+
+    git(repo, "checkout", base_branch)
+    git(repo, "rm", "src/app.py")
+    base_sha = commit_all(repo, "base-deletes")
+
+    topology = get_git_topology(base_sha, head_sha, cwd=repo)
+    assert topology["relationship"] == "DIVERGED"
+    assert collision_paths(repo, base_sha, head_sha) == {"src/app.py"}
+
+
+def test_rename_collisions_are_path_string_overlap_not_identity_tracking(tmp_path):
+    """Renames are path-string overlap only; --no-renames is the contract.
+
+    Head renames src/old.py -> src/renamed.py. Base modifies src/old.py and
+    does not touch src/renamed.py. A rename-identity detector might treat
+    those as the same file. This tool reports only the overlapping path
+    string src/old.py (deleted on one side, modified on the other) and must
+    not report src/renamed.py.
+    """
+    repo = init_repo(tmp_path)
+    write_files(repo, {"src/old.py": "shared\n"})
+    write_config(repo)
+    commit_all(repo, "shared")
+    base_branch = current_branch(repo)
+
+    git(repo, "checkout", "-b", "feature/collision")
+    git(repo, "mv", "src/old.py", "src/renamed.py")
+    head_sha = commit_all(repo, "head-renames")
+
+    git(repo, "checkout", base_branch)
+    write_files(repo, {"src/old.py": "base-modified\n"})
+    base_sha = commit_all(repo, "base-modifies-old-path")
+
+    topology = get_git_topology(base_sha, head_sha, cwd=repo)
+    assert topology["relationship"] == "DIVERGED"
+
+    paths = collision_paths(repo, base_sha, head_sha)
+    assert paths == {"src/old.py"}
+    assert "src/renamed.py" not in paths
